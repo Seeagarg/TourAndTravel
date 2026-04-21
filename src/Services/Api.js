@@ -1,0 +1,24 @@
+export const base_url = 'http://164.52.215.8:9373';
+export const login_api = `${base_url}/api/auth/login`;
+export const saveDestination_api = `${base_url}/api/admin/content/destinations`;
+export const updateDestination_api = (destId) => `${base_url}/api/admin/content/destinations/${destId}`;
+export const deleteDestination_api = (destId) => `${base_url}/api/admin/content/destinations/${destId}`;
+export const uploadIcon_api = (destId) => `${base_url}/api/admin/content/destinations/${destId}/icon`;
+export const uploadBanner_api = (destId) => `${base_url}/api/admin/content/destinations/${destId}/banner`;
+export const saveTour_api = (tourId) => `${base_url}/api/admin/content/tours/${tourId}`;
+export const deleteTour_api = (tourId) => `${base_url}/api/admin/content/tours/${tourId}`;
+export const createTour_api = `${base_url}/api/admin/content/tours`;
+export const allPackages_api = `${base_url}/api/public/packages`;
+
+export const Destinations_api = (destId) => `${base_url}/api/destinations/${destId}/tours?page=0&size=12`;
+export const allDestinations_api = `${base_url}/api/destinations`;
+export const shimlaManali_api = `${base_url}/api/tours/shimla-manali-tour`;
+export const getTourBySlug_api = (slug) => `${base_url}/api/tours/${slug}`;
+export const getTourReviews_api = (tourId) => `${base_url}/api/tours/${tourId}/reviews`;
+export const saveReview_api = (tourId) => `${base_url}/api/tours/${tourId}/reviews`;
+export const saveTourFullContent_api = (tourId) => `${base_url}/api/admin/content/tours/${tourId}/full-content`;
+export const uploadTourImagesBulk_api = (tourId) => `${base_url}/api/admin/content/tours/${tourId}/images/bulk`;
+export const uploadTourImage_api = (tourId) => `${base_url}/api/admin/content/tours/${tourId}/images`;
+export const contact_api = `${base_url}/api/v1/contact`;
+export const guestAuth_api = `${base_url}/api/auth/guest`;
+export const chat_api = `${base_url}/api/chat`;
