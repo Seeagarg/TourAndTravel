@@ -1,11 +1,12 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import styles from "./ReviewsSection.module.css";
 import { FaStar, FaCamera, FaTimes } from "react-icons/fa";
 import axios from "axios";
-import { saveReview_api } from "../../Services/Api";
+import { saveReview_api, getTourReviews_api, base_url } from "../../Services/Api";
+import { getCookie } from "../../utills/cookieManager";
 import toast from "react-hot-toast";
 
-const reviews = [
+const defaultReviews = [
   {
     name: "Ankit Verma",
     text: "Our Delhi trip was perfectly planned from start to end. The airport pickup was smooth, the hotel was comfortable, and the sightseeing covered all major attractions. The rickshaw ride in Chandni Chowk was the highlight of our tour!",
@@ -72,7 +73,9 @@ const AddReviewForm = ({ tourId, onClose, onRefresh }) => {
       if (image) formData.append("images", image);
 
       const response = await axios.post(saveReview_api(tourId), formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { 
+          "Content-Type": "multipart/form-data"
+        }
       });
 
       if (response.status === 200 || response.status === 201) {
@@ -191,8 +194,44 @@ const AddReviewForm = ({ tourId, onClose, onRefresh }) => {
 
 const ReviewsSection = ({ tour }) => {
   const [showForm, setShowForm] = useState(false);
+  const [dynamicReviews, setDynamicReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!tour?.id) return;
+      setLoadingReviews(true);
+      try {
+        const res = await axios.get(getTourReviews_api(tour.id));
+        if (res.data && res.data.status === 200 && Array.isArray(res.data.data)) {
+          const mapped = res.data.data.map(r => ({
+            name: r.userName || r.name || r.reviewerName || "Happy Traveler",
+            text: r.reviewText || r.text || r.comment || "",
+            images: (r.images || []).map(img => img.startsWith('http') ? img : `${base_url}${img}`)
+          }));
+          setDynamicReviews(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch reviews", err);
+      } finally {
+        setLoadingReviews(false);
+      }
+    };
+
+    fetchReviews();
+  }, [tour?.id]);
 
   if (!tour) return null;
+
+  // Priority: 1. Locally fetched reviews (dynamicReviews) 
+  //           2. Reviews bundled with tour object (tour.reviews)
+  //           3. Static default reviews if both above are empty
+  const hasDynamic = dynamicReviews && dynamicReviews.length > 0;
+  const hasTourReviews = tour.reviews && tour.reviews.length > 0;
+
+  const displayReviews = hasDynamic 
+    ? dynamicReviews 
+    : (hasTourReviews ? tour.reviews : defaultReviews);
 
   return (
     <section className={styles.wrapper}>
@@ -205,26 +244,39 @@ const ReviewsSection = ({ tour }) => {
 
       {/* Reviews */}
       <div className={styles.reviews}>
-        {(tour.reviews?.length > 0 ? tour.reviews : reviews).map((review, index) => (
-          <div key={index} className={styles.reviewCard}>
-            {/* Images */}
-            <div className={styles.imageStack}>
-              {review.images && (
-                <>
-                  <img src={review.images[0]} className={styles.imageOne} alt="" />
-                  {review.images[1] && <img src={review.images[1]} className={styles.imageTwo} alt="" />}
-                </>
-              )}
+        {loadingReviews ? (
+          <p style={{ textAlign: 'center', width: '100%', color: '#94a3b8' }}>Loading verified reviews...</p>
+        ) : (
+          displayReviews.map((review, index) => (
+            <div key={index} className={styles.reviewCard}>
+              {/* Images */}
+              <div className={styles.imageStack}>
+                {review.images && review.images.length > 0 ? (
+                  <>
+                    <img src={review.images[0]} className={styles.imageOne} alt="" />
+                    {review.images[1] ? (
+                      <img src={review.images[1]} className={styles.imageTwo} alt="" />
+                    ) : (
+                      <img src="https://picsum.photos/seed/travel2/300/400" className={styles.imageTwo} alt="" />
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <img src={`https://picsum.photos/seed/${index + 1}/300/400`} className={styles.imageOne} alt="" />
+                    <img src={`https://picsum.photos/seed/${index + 10}/300/400`} className={styles.imageTwo} alt="" />
+                  </>
+                )}
+              </div>
+
+              {/* Text */}
+              <p className={styles.text}>
+                “{review.text || review.reviewText || review.comment}”
+              </p>
+
+              <p className={styles.name}>{review.name || review.userName || review.reviewerName}</p>
             </div>
-
-            {/* Text */}
-            <p className={styles.text}>
-              “{review.reviewText || review.text || review.comment}”
-            </p>
-
-            <p className={styles.name}>{review.userName || review.name || review.reviewerName}</p>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       <div className={styles.addReviewRow}>
@@ -237,7 +289,25 @@ const ReviewsSection = ({ tour }) => {
         <AddReviewForm 
           tourId={tour.id} 
           onClose={() => setShowForm(false)} 
-          onRefresh={() => window.location.reload()} 
+          onRefresh={() => {
+            // Re-fetch reviews instead of full page reload
+            const fetchReviews = async () => {
+              if (!tour?.id) return;
+              try {
+                const res = await axios.get(getTourReviews_api(tour.id));
+                if (res.data && res.data.status === 200 && Array.isArray(res.data.data)) {
+                  const mapped = res.data.data.map(r => ({
+                    name: r.userName || r.name || r.reviewerName || "Happy Traveler",
+                    text: r.reviewText || r.text || r.comment || "",
+                    images: (r.images || []).map(img => img.startsWith('http') ? img : `${base_url}${img}`)
+                  }));
+                  setDynamicReviews(mapped);
+                }
+              } catch (err) {}
+            };
+            fetchReviews();
+            toast.success("List updated!");
+          }} 
         />
       )}
     </section>

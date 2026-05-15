@@ -22,3 +22,12 @@ export const uploadTourImage_api = (tourId) => `${base_url}/api/admin/content/to
 export const contact_api = `${base_url}/api/v1/contact`;
 export const guestAuth_api = `${base_url}/api/auth/guest`;
 export const chat_api = `${base_url}/api/chat`;
+export const dashboardSummary_api = `${base_url}/api/admin/content/dashboard-summary`;
+export const analytics_api = (from, to) => `${base_url}/api/admin/content/analytics${from && to ? `?from=${from}&to=${to}` : ''}`;
+export const userQueries_api = (from, to, page = 0, size = 10) => `${base_url}/api/admin/content/user-queries?page=${page}&size=${size}${from && to ? `&from=${from}&to=${to}` : ''}`;
+export const getAllReviews_api = `${base_url}/api/admin/content/reviews/all`;
+export const getPendingReviews_api = `${base_url}/api/admin/content/reviews/pending`;
+export const approveReview_api = (reviewId) => `${base_url}/api/admin/content/reviews/${reviewId}/approve`;
+export const rejectReview_api = (reviewId) => `${base_url}/api/admin/content/reviews/${reviewId}/reject`;
+export const updateReview_api = (reviewId) => `${base_url}/api/admin/content/reviews/${reviewId}`;
+export const deleteReview_api = (reviewId) => `${base_url}/api/admin/content/reviews/${reviewId}`;

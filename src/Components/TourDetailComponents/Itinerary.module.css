@@ -329,6 +329,28 @@
 
   .dayContent {
     font-size: 14px;
+    padding: 15px;
+  }
+
+  .imageGallery {
+    overflow-x: auto;
+    display: flex;
+    gap: 10px;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .imageGallery img {
+    min-width: 200px;
+    height: 140px;
+  }
+
+  .description p {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 8px;
   }
 }
 

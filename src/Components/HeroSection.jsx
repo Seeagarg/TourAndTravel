@@ -56,7 +56,7 @@ const HeroSection = ({ type, onTypeSelect }) => {
 
   const tourTypes = [
     { id: 'group', icon: '👥', label: 'Group Tour' },
-    { id: 'corporate', icon: '🏢', label: 'Corporate Tour' },
+    // { id: 'corporate', icon: '🏢', label: 'Corporate Tour' },
     { id: 'couple', icon: '💑', label: 'Couple Trip' },
     { id: 'honeymoon', icon: '💍', label: 'Honeymoon' }
   ];

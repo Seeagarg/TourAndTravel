@@ -25,8 +25,7 @@ const Hero = ({ tour }) => {
 
         <div className={styles.details}>
           <p>
-            This {tour.place} tour is perfect for first-time visitors who want to
-            experience the rich culture and beauty.
+            {tour.summary || tour.subtitle || `This ${tour.place} tour is perfect for first-time visitors who want to experience the rich culture and beauty.`}
           </p>
           <ul className={styles.list}>
             {tour.inclusions.slice(0, 4).map((item, index) => (

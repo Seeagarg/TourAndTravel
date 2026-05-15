@@ -1,43 +1,45 @@
 import { useState } from "react";
 import styles from "./FAQ.module.css";
 
-const faqs = [
+const globalAgencyFaqs = [
   {
-    question: "What is the best time to visit Delhi?",
-    answer:
-      "The best time to visit Delhi is from October to March when the weather is pleasant and ideal for sightseeing. Summers can be very hot, while winters are comfortable for exploring historical monuments."
+    question: "How can I book a tour with India Travel Holiday?",
+    answer: "You can book directly through our website by choosing your preferred package, or you can get in touch with our travel experts via the 'Contact Us' page or WhatsApp for a more personalized booking experience."
   },
   {
-    question: "What should I carry for a Delhi tour?",
-    answer:
-      "Carry comfortable walking shoes, light cotton clothes (or warm layers in winter), sunglasses, sunscreen, basic medicines, and a valid photo ID. A small backpack is useful for daily sightseeing."
+    question: "Can I customize the existing tour itineraries?",
+    answer: "Absolutely! We specialize in tailor-made experiences. You can modify the duration, add specific destinations, or upgrade your accommodations. Just let our team know your preferences."
   },
   {
-    question: "Is this Delhi tour suitable for families and senior citizens?",
-    answer:
-      "Yes, this Delhi tour is suitable for families and senior citizens. Sightseeing is planned at a relaxed pace with AC transfers, and assistance is available if required."
+    question: "What documents should I carry during my trip?",
+    answer: "Travelers are required to carry a valid government-issued Photo ID (Aadhar Card, Voter ID, or Passport). For certain restricted areas, additional permits may be needed, which we will help you arrange."
   },
   {
-    question: "Are monument entry tickets included in the package?",
-    answer:
-      "Entry tickets to monuments are generally not included unless mentioned. You can purchase tickets on-site or online, and our guide will assist you during visits."
+    question: "What are the available payment methods?",
+    answer: "We accept all major payment methods including UPI, Credit/Debit Cards (Visa, MasterCard, Amex), and Bank Transfers. We also offer flexible installment options for early bookings."
   },
   {
-    question: "Is airport or railway station pickup included?",
-    answer:
-      "Yes, pickup and drop from Indira Gandhi International Airport or New Delhi Railway Station are included as per the itinerary."
+    question: "What is India Travel Holiday's cancellation and refund policy?",
+    answer: "Cancellations made 30 days prior to the trip are usually eligible for a full refund (minus minimal service charges). Rules vary based on the specific hotel and transport policies included in your package."
   },
   {
-    question: "Can this Delhi tour package be customized?",
-    answer:
-      "Absolutely! The itinerary can be customized based on your travel dates, interests, and budget. You can add or remove sightseeing spots or upgrade hotels as per your preference."
+    question: "Is 24/7 support available during the tour?",
+    answer: "Yes, we provide 24/7 on-trip assistance. Once your booking is confirmed, you'll be assigned a dedicated trip manager whom you can contact via phone or WhatsApp for any emergencies or help."
+  },
+  {
+    question: "Are meals and entry fees included in the packages?",
+    answer: "Standard packages usually include breakfast and dinner. Entry fees to monuments are typically excluded unless specifically mentioned, allowing you the flexibility to choose what you want to see."
+  },
+  {
+    question: "What happens in case of bad weather or sudden closures?",
+    answer: "Your safety is our priority. In case of unforeseen weather conditions or landslides, our ground team will provide alternative sightseeing options or adjust the itinerary to ensure a smooth experience."
   }
 ];
 
 const FAQ = ({ tour }) => {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const displayFaqs = (tour && tour.faqs) ? tour.faqs : faqs;
+  const displayFaqs = (tour && tour.faqs && tour.faqs.length > 0) ? tour.faqs : globalAgencyFaqs;
 
   const toggleFAQ = (index) => {
     setActiveIndex(index === activeIndex ? null : index);
@@ -61,7 +63,7 @@ const FAQ = ({ tour }) => {
                 Q. {faq.question}
               </span>
               <span className={styles.icon}>
-                {activeIndex === index ? "⌄" : "›"}
+                ▾
               </span>
             </div>
 

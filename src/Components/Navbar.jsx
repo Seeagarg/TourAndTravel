@@ -52,7 +52,7 @@ const Navbar = () => {
   const navItems = [
     { label: "Early Bird Offer", to: "/early-bird" },
     { label: "Upcoming Trips", to: "/trips" },
-    { label: "Corporate Tours", to: "/corporate" },
+    // { label: "Corporate Tours", to: "/corporate" },
     { label: "About Us", to: "/about" },
     { label: "Contact Us", to: "/contact" },
   ];
@@ -73,9 +73,9 @@ const Navbar = () => {
         }`}
       >
         {/* LEFT LOGO */}
-        <Link to="/" className={classes.logo} aria-label="Travelio home">
-          <img src={logoImg} alt="Travelio logo" className={classes.logoImg} />
-          <span className={classes.logoText}>Travelio</span>
+        <Link to="/" className={classes.logo} aria-label="India Travel Holiday home">
+          <img src={logoImg} alt="India Travel Holiday logo" className={classes.logoImg} />
+          <span className={classes.logoText}>India Travel Holiday</span>
         </Link>
 
         <form className={classes.searchBox} onSubmit={handleSearchSubmit}>

@@ -46,7 +46,7 @@ const About = () => {
                     <h3>Our Journey</h3>
                     <h2>Crafting Dreams Since 2015</h2>
                     <p>
-                        Travelio started with a simple belief: that travel should be more than just visiting a place—it should be about experiencing it. What began as a small group of enthusiastic travelers has grown into one of India's leading multi-day tour operators.
+                        India Travel Holiday started with a simple belief: that travel should be more than just visiting a place—it should be about experiencing it. What began as a small group of enthusiastic travelers has grown into one of India's leading multi-day tour operators.
                     </p>
                     <p>
                         We don't just book hotels and transport; we own the entire experience. From on-ground operations to 24/7 support, we ensure that your journey is seamless, safe, and truly magical.
@@ -82,7 +82,7 @@ const About = () => {
             {/* WHY US - FEATURES SECTION */}
             <section className={classes.features}>
                 <div className={classes.featuresHeader}>
-                    <h2>Why Travel with Travelio?</h2>
+                    <h2>Why Travel with India Travel Holiday?</h2>
                     <p>We combine technology with human touch to deliver tours that fail nowhere in execution.</p>
                 </div>
                 <div className={classes.featuresGrid}>

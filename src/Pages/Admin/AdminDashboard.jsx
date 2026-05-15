@@ -1,12 +1,53 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './Admin.module.css';
+import axios from 'axios';
+import { dashboardSummary_api } from '../../Services/Api';
+import { getCookie } from '../../utills/cookieManager';
 
 const AdminDashboard = () => {
+  const [statsData, setStatsData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const token = getCookie('adminToken');
+      
+      if (!token) {
+        console.warn("No admin token found in cookies, skipping stats fetch.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        console.log("Fetching dashboard summary with token starting with:", token.substring(0, 10) + "...");
+        const response = await axios.get(dashboardSummary_api, {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (response.data) {
+          setStatsData(response.data.data || response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+        if (error.response?.status === 403) {
+          console.error("Authentication failed. Please re-login.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
   const stats = [
-    { title: 'Total Tours', value: '24' },
-    { title: 'Active Locations', value: '11' },
-    { title: 'Pending Reviews', value: '15' },
-    { title: 'Total Bookings', value: '128' },
+    { title: 'Total Tours', value: statsData?.totalTours || '0' },
+    { title: 'Active Locations', value: statsData?.totalDestinations || '0' },
+    { title: 'Total Reviews', value: statsData?.totalReviews || '0' },
+    { title: 'Pending Reviews', value: statsData?.pendingReviews || '0' },
+    { title: 'Total Bookings', value: statsData?.totalBookings || '0' },
+    { title: 'User Queries', value: statsData?.totalUserQueries || '0' },
   ];
 
   return (
@@ -17,44 +58,23 @@ const AdminDashboard = () => {
           <p>Welcome back, Admin!</p>
         </div>
         <div className={styles.actions}>
-          <button className={styles.btnPrimary}>Generate Report</button>
+          <button className={styles.btnPrimary} onClick={() => window.location.reload()}>Refresh Stats</button>
         </div>
       </div>
 
       <div className={styles.statsGrid}>
-        {stats.map((stat, idx) => (
-          <div key={idx} className={styles.statCard}>
-            <div className={styles.statTitle}>{stat.title}</div>
-            <div className={styles.statValue}>{stat.value}</div>
-          </div>
-        ))}
+        {loading ? (
+          <p style={{ color: '#94a3b8', padding: '20px' }}>Loading statistics...</p>
+        ) : (
+          stats.map((stat, idx) => (
+            <div key={idx} className={styles.statCard}>
+              <div className={styles.statTitle}>{stat.title}</div>
+              <div className={styles.statValue}>{stat.value}</div>
+            </div>
+          ))
+        )}
       </div>
 
-      <div className={styles.card}>
-        <h2>Recent Activity</h2>
-        <div className={styles.tableContainer}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Tour</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Revenue</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[1, 2, 3, 4, 5].map(i => (
-                <tr key={i}>
-                  <td>Himachal Snow Tour {i}</td>
-                  <td><span style={{ color: '#22c55e' }}>Active</span></td>
-                  <td>Oct 12, 2023</td>
-                  <td>₹12,499</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   );
 };

@@ -18,7 +18,7 @@ const TourNavbar = () => {
     <header className={styles.navbar}>
       <Link to="/" className={styles.logo}>
         <span className={styles.logoIcon}>✈️</span>
-        <span className={styles.logoText}>Travelio</span>
+        <span className={styles.logoText}>India Travel Holiday</span>
       </Link>
 
       {/* Center: Search */}

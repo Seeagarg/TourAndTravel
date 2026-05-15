@@ -39,7 +39,7 @@ const Footer = () => {
 
             {/* Brand Section */}
             <div className={classes.brand}>
-              <h2>TravelWorld</h2>
+              <h2>India Travel Holiday</h2>
               <p>
                 Explore breathtaking destinations, curated experiences, and
                 unforgettable journeys across India.
@@ -87,7 +87,7 @@ const Footer = () => {
           </div>
 
           <div className={classes.bottom}>
-            © {new Date().getFullYear()} TravelWorld. All rights reserved.
+            © {new Date().getFullYear()} India Travel Holiday. All rights reserved.
           </div>
         </div>
       </footer>

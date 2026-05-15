@@ -18,9 +18,13 @@ const TourDetailsPage = () => {
         const result = response.data;
         if (result.status === 200 && result.data) {
           const apiTour = result.data;
+          
+          // CRITICAL: Ensure we get the correct ID for review fetching
+          const tourId = apiTour.id || apiTour._id || apiTour.tourId;
+
           // Map API data to the format expected by PlaceDetail / TourDetailComponents
           const mappedTour = {
-            id: apiTour.id,
+            id: tourId,
             slug: apiTour.slug || slug,
             place: apiTour.placeName || "Himachal",
             title: apiTour.title || apiTour.tourName,
@@ -60,7 +64,6 @@ const TourDetailsPage = () => {
           setTour(mappedTour);
 
           // Fetch extra reviews from the new API if ID exists
-          const tourId = apiTour.id || apiTour._id;
           if (tourId) {
             try {
               const reviewsResponse = await axios.get(getTourReviews_api(tourId));
@@ -76,7 +79,7 @@ const TourDetailsPage = () => {
                   reviews: rawReviews.map(r => ({
                     name: r.userName || r.user_name || r.name || r.reviewer_name || "Happy Traveler",
                     text: r.comment || r.review_text || r.text || r.review || "",
-                    images: r.images || []
+                    images: (r.images || []).map(img => img.startsWith('http') ? img : `${base_url}${img}`)
                   }))
                 }));
               }

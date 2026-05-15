@@ -47,7 +47,7 @@ const OfferBanner = () => {
     Deals are <span>marching your way!</span>
   </p>
 
-  <p className={styles.brand}>Travelio'S</p>
+  <p className={styles.brand}>INDIA TRAVEL HOLIDAY'S</p>
 
   <h1 className={styles.mainTitle}>
     Early Bird

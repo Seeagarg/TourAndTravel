@@ -21,6 +21,8 @@ import ManageReviews from '../Pages/Admin/ManageReviews';
 import ChatPage from '../Pages/ChatPage';
 import AdminLoginPage from '../Pages/Admin/AdminLoginPage';
 import EarlyBird from '../Pages/EarlyBird';
+import ManageBookings from '../Pages/Admin/ManageBookings';
+import ManageQueries from '../Pages/Admin/ManageQueries';
 
 const Routing = () => {
 
@@ -85,6 +87,14 @@ const Routing = () => {
         {
           path: "reviews",
           element: <ManageReviews />,
+        },
+        {
+          path: "analytics-report",
+          element: <ManageBookings />,
+        },
+        {
+          path: "user-queries",
+          element: <ManageQueries />,
         },
       ]
     },

@@ -10,6 +10,7 @@ import top_chat from '../assets/top_chat.png'
 import { FaCommentDots, FaPaperPlane, FaArrowLeft, FaPlane, FaHotel, FaMapMarkedAlt, FaQuestionCircle } from 'react-icons/fa';
 import axios from 'axios';
 import { guestAuth_api, chat_api } from '../Services/Api';
+import { getCookie } from '../utills/cookieManager';
 
 const ChatPage = () => {
     const [messages, setMessages] = useState([
@@ -47,9 +48,19 @@ const ChatPage = () => {
 
     useEffect(() => {
         const fetchToken = async () => {
+            // Priority 1: Check for admin token in cookies
+            const adminToken = getCookie('adminToken');
+            if (adminToken) {
+                setToken(adminToken);
+                return;
+            }
+
+            // Priority 2: Check for existing session token
             if (token) return;
+
+            // Priority 3: Fetch new guest token
             try {
-                const res = await axios.post(guestAuth_api);
+                const res = await axios.post(guestAuth_api, {});
                 if (res.data && res.data.data && res.data.data.token) {
                     const newToken = res.data.data.token;
                     setToken(newToken);
@@ -72,7 +83,9 @@ const ChatPage = () => {
         setIsTyping(true);
 
         try {
-            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            // Force re-check token before sending to handle session updates
+            const currentToken = getCookie('adminToken') || token;
+            const headers = currentToken ? { Authorization: `Bearer ${currentToken}` } : {};
             
             const res = await axios.post(chat_api, { message: messageText }, { headers });
             
@@ -82,7 +95,7 @@ const ChatPage = () => {
                 botResponse = res.data.data;
             } else if (res.data && res.data.message) {
                 botResponse = res.data.message;
-            } else if (typeof res.data === 'string') {
+            } else if (res.data && typeof res.data === 'string') {
                 botResponse = res.data;
             }
 

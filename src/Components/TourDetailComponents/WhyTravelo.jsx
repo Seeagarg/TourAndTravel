@@ -32,8 +32,8 @@ const WhyTravelo = () => {
     <section className={styles.wrapper}>
       {/* Heading */}
       <div className={styles.heading}>
-        <h2>Travelio's Secret Sauce</h2>
-        <p>Why Travelio?</p>
+        <p>EXPERIENCE EXCELLENCE</p>
+        <h2>Why Choose India Travel Holiday?</h2>
         <span className={styles.underline}></span>
       </div>
 
@@ -41,6 +41,7 @@ const WhyTravelo = () => {
       <div className={styles.cards}>
         {features.map((item, index) => (
           <div key={index} className={styles.card}>
+            <div className={styles.circleDecor}></div>
             <h3>{item.title}</h3>
             <p>{item.desc}</p>
 

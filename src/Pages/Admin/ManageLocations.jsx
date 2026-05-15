@@ -10,10 +10,12 @@ import {
   uploadBanner_api,
   base_url
 } from '../../Services/Api';
+import { useNavigate } from 'react-router-dom';
 import { getCookie } from '../../utills/cookieManager';
 import toast from 'react-hot-toast';
 
 const ManageLocations = () => {
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [editingLoc, setEditingLoc] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -27,8 +29,13 @@ const ManageLocations = () => {
   // Fetch destinations from API
   useEffect(() => {
     const fetchLocations = async () => {
+      const token = getCookie('adminToken');
+      if (!token) {
+        navigate('/admin/login');
+        return;
+      }
+
       try {
-        const token = getCookie('adminToken');
         const response = await axios.get(allDestinations_api, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -45,12 +52,15 @@ const ManageLocations = () => {
         }
       } catch (error) {
         console.error('Error fetching locations:', error);
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          navigate('/admin/login');
+        }
       } finally {
         setFetching(false);
       }
     };
     fetchLocations();
-  }, []);
+  }, [navigate]);
 
   const [selectedIconFile, setSelectedIconFile] = useState(null);
   const [selectedBannerFile, setSelectedBannerFile] = useState(null);
@@ -311,40 +321,42 @@ const ManageLocations = () => {
               <h2 style={{ fontSize: '1.2rem' }}>Upload {quickUploadType?.toUpperCase()}</h2>
               <button className={styles.closeBtn} onClick={() => setShowUploadModal(false)}>&times;</button>
             </div>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-              Select a file for <strong>{uploadLoc?.label}</strong>
-            </p>
-            <div className={styles.formGroup}>
-              <input
-                type="file"
-                className={styles.input}
-                accept="image/*"
-                onChange={e => handleFileSelect(e, quickUploadType)}
-              />
-            </div>
-
-            {/* Real-time Preview */}
-            {(quickUploadType === 'icon' ? iconPreview : bannerPreview) && (
-              <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-                <img
-                  src={quickUploadType === 'icon' ? iconPreview : bannerPreview}
-                  alt="preview"
-                  style={{
-                    maxWidth: '100%',
-                    maxHeight: '150px',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
-                    border: '1px solid rgba(255,255,255,0.1)'
-                  }}
+            
+            <div className={styles.scrollableForm} style={{ padding: '1.5rem 2rem' }}>
+              <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+                Select a file for <strong>{uploadLoc?.label}</strong>
+              </p>
+              <div className={styles.formGroup}>
+                <input
+                  type="file"
+                  className={styles.input}
+                  accept="image/*"
+                  onChange={e => handleFileSelect(e, quickUploadType)}
                 />
               </div>
-            )}
 
-            <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
+              {(quickUploadType === 'icon' ? iconPreview : bannerPreview) && (
+                <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                  <img
+                    src={quickUploadType === 'icon' ? iconPreview : bannerPreview}
+                    alt="preview"
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '150px',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
+                      border: '1px solid rgba(255,255,255,0.1)'
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className={styles.modalFooter} style={{ gap: '1rem' }}>
               <button className={styles.btnPrimary} style={{ flex: 1 }} onClick={submitQuickUpload} disabled={loading}>
                 {loading ? 'Uploading...' : 'Confirm Upload'}
               </button>
-              <button className={styles.btnOutline} onClick={() => setShowUploadModal(false)}>Cancel</button>
+              <button className={styles.btnOutline} style={{ flex: 1 }} onClick={() => setShowUploadModal(false)}>Cancel</button>
             </div>
           </div>
         </div>
@@ -368,51 +380,53 @@ const ManageLocations = () => {
               <button className={styles.closeBtn} onClick={resetForm}>&times;</button>
             </div>
 
-            <div className={styles.splitForms} style={{ gridTemplateColumns: '1fr' }}>
-              <div className={styles.formSection} style={{ padding: 0 }}>
-                <form onSubmit={syncMetadata} className={styles.formGrid}>
-                  <div className={styles.formGroup}>
-                    <label>Destination ID</label>
-                    <input
-                      type="text"
-                      className={styles.input}
-                      required
-                      disabled={!!editingLoc}
-                      style={editingLoc ? { opacity: 0.6, cursor: 'not-allowed', background: 'rgba(255,255,255,0.05)' } : {}}
-                      value={formData.id}
-                      onChange={e => setFormData({ ...formData, id: e.target.value.toLowerCase() })}
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Display Label</label>
-                    <input
-                      type="text"
-                      className={styles.input}
-                      required
-                      value={formData.label}
-                      onChange={e => setFormData({ ...formData, label: e.target.value })}
-                      autoFocus
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Is Featured?</label>
-                    <select
-                      className={styles.input}
-                      value={formData.featured}
-                      onChange={e => setFormData({ ...formData, featured: e.target.value === 'true' })}
-                    >
-                      <option value="true">True</option>
-                      <option value="false">False</option>
-                    </select>
-                  </div>
-
-                  <div style={{ marginTop: '1.5rem' }}>
-                    <button type="submit" className={styles.btnPrimary} style={{ width: '100%', padding: '0.8rem' }} disabled={loading}>
-                      {editingLoc ? 'Save Changes' : 'Create Destination'}
-                    </button>
-                  </div>
-                </form>
+            <div className={styles.scrollableForm}>
+              <div className={styles.splitForms} style={{ gridTemplateColumns: '1fr' }}>
+                <div className={styles.formSection} style={{ padding: 0 }}>
+                  <form id="locationForm" onSubmit={syncMetadata} className={styles.formGrid}>
+                    <div className={styles.formGroup}>
+                      <label>Destination ID</label>
+                      <input
+                        type="text"
+                        className={styles.input}
+                        required
+                        disabled={!!editingLoc}
+                        style={editingLoc ? { opacity: 0.6, cursor: 'not-allowed', background: 'rgba(255,255,255,0.05)' } : {}}
+                        value={formData.id}
+                        onChange={e => setFormData({ ...formData, id: e.target.value.toLowerCase() })}
+                      />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label>Display Label</label>
+                      <input
+                        type="text"
+                        className={styles.input}
+                        required
+                        value={formData.label}
+                        onChange={e => setFormData({ ...formData, label: e.target.value })}
+                        autoFocus
+                      />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label>Is Featured?</label>
+                      <select
+                        className={styles.input}
+                        value={formData.featured}
+                        onChange={e => setFormData({ ...formData, featured: e.target.value === 'true' })}
+                      >
+                        <option value="true">True</option>
+                        <option value="false">False</option>
+                      </select>
+                    </div>
+                  </form>
+                </div>
               </div>
+            </div>
+
+            <div className={styles.modalFooter} style={{ padding: '1.5rem 2rem' }}>
+              <button type="submit" form="locationForm" className={styles.btnPrimary} style={{ width: '100%', padding: '0.8rem' }} disabled={loading}>
+                {loading ? 'Processing...' : (editingLoc ? 'Save Changes' : 'Create Destination')}
+              </button>
             </div>
 
             <div className={styles.modalFooter} style={{ display: 'none' }}>

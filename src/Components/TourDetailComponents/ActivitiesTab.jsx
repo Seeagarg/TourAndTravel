@@ -8,15 +8,23 @@ const ActivitiesTab = ({ tour }) => {
       <h2 className={styles.heading}>Iconic Experiences in {tour.place}</h2>
 
       <div className={styles.experiences}>
-        {(tour.activities?.length > 0 ? tour.activities : tour.highlights).map((item, index) => (
-          <div key={index} className={styles.experienceCard}>
-            <img 
-              src={tour.images?.activity || `https://picsum.photos/400/300?sig=${index}`} 
-              alt={item} 
-            />
-            <span>{item}</span>
-          </div>
-        ))}
+        {((tour.activities?.length > 0 ? tour.activities : tour.highlights) || []).map((item, index) => {
+          const gallery = tour.images?.gallery || [];
+          const imgSrc = gallery.length > 0 
+            ? gallery[index % gallery.length] 
+            : `https://picsum.photos/400/300?sig=${index + 10}`;
+            
+          return (
+            <div key={index} className={styles.experienceCard}>
+              <img 
+                src={imgSrc} 
+                alt={item} 
+                onError={(e) => { e.target.src = `https://picsum.photos/400/300?sig=${index + 5}`; }}
+              />
+              <span>{item}</span>
+            </div>
+          );
+        })}
       </div>
 
       <div className={styles.itinerarySummary}>

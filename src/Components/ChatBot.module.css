@@ -38,24 +38,17 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, transparent 70%);
+    width: 140%;
+    height: 140%;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%);
     border-radius: 50%;
     z-index: -1;
     animation: pulseRing 3s ease-out infinite;
 }
 
 @keyframes pulseRing {
-    0% {
-        transform: translate(-50%, -50%) scale(0.8);
-        opacity: 1;
-    }
-
-    100% {
-        transform: translate(-50%, -50%) scale(1.5);
-        opacity: 0;
-    }
+    0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
 }
 
 .launcher:hover {
@@ -71,33 +64,6 @@
     justify-content: center;
     filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.3));
     position: relative;
-}
-
-.launcherIcon::after {
-    content: '';
-    position: absolute;
-    width: 80%;
-    height: 20%;
-    bottom: -10%;
-    background: rgba(0, 0, 0, 0.1);
-    filter: blur(10px);
-    border-radius: 50%;
-    z-index: -1;
-    animation: shadowPulse 4s ease-in-out infinite;
-}
-
-@keyframes shadowPulse {
-
-    0%,
-    100% {
-        transform: scale(1);
-        opacity: 0.3;
-    }
-
-    50% {
-        transform: scale(0.8);
-        opacity: 0.1;
-    }
 }
 
 .launcherIcon img {
@@ -419,13 +385,13 @@
 
 @media (max-width: 768px) {
     .chatbotWrapper {
-        right: 1.5rem;
-        bottom: 1.5rem;
+        right: 0rem;
+        bottom: 2rem; /* Move up slightly from the very bottom corner */
     }
 
     .launcherIcon {
-        width: 80px;
-        height: 80px;
+        width: 240px;
+        height: 240px;
     }
 
     .chatWindow {
@@ -479,8 +445,8 @@
 
 @media (max-width: 480px) {
     .launcherIcon {
-        width: 70px;
-        height: 70px;
+        width: 220px;
+        height: 220px;
     }
 
     .chatWindow {

@@ -45,7 +45,7 @@ const AdminLoginPage = () => {
     <div className={styles.loginContainer}>
       <div className={styles.loginCard}>
         <div className={styles.header}>
-          <span className={styles.logo}>Travelio</span>
+          <span className={styles.logo}>India Travel Holiday</span>
           <h2>Admin Portals</h2>
           <p>Login to manage your tours and destinations</p>
         </div>

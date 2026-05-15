@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import styles from './Admin.module.css';
 import axios from 'axios';
 import { saveTour_api, createTour_api, allDestinations_api, Destinations_api, getTourBySlug_api, deleteTour_api, saveTourFullContent_api, uploadTourImagesBulk_api, uploadTourImage_api } from '../../Services/Api';
+import { useNavigate } from 'react-router-dom';
 import { getCookie } from '../../utills/cookieManager';
 import toast from 'react-hot-toast';
 
 const ManageTours = () => {
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [showItineraryModal, setShowItineraryModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
@@ -21,6 +23,7 @@ const ManageTours = () => {
   const [fetchingItinerary, setFetchingItinerary] = useState(false);
   
   const [selectedGalleryFiles, setSelectedGalleryFiles] = useState([]);
+  const [selectedImagePreviews, setSelectedImagePreviews] = useState([]);
   const [uploadFolder, setUploadFolder] = useState('');
   const [coverIndex, setCoverIndex] = useState(0);
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -52,8 +55,13 @@ const ManageTours = () => {
 
   useEffect(() => {
     const fetchDestinations = async () => {
+      const token = getCookie('adminToken');
+      if (!token) {
+        navigate('/admin/login');
+        return;
+      }
+
       try {
-        const token = getCookie('adminToken');
         const response = await axios.get(allDestinations_api, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -65,10 +73,13 @@ const ManageTours = () => {
         }
       } catch (error) {
         console.error('Error fetching destinations:', error);
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          navigate('/admin/login');
+        }
       }
     };
     fetchDestinations();
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (!activeDestId) return;
@@ -164,6 +175,7 @@ const ManageTours = () => {
       setFetchingItinerary(false);
       setShowUploadForm(false);
       setSelectedGalleryFiles([]);
+      setSelectedImagePreviews([]);
       setUploadFolder(tour.placeName || '');
     }
   };
@@ -184,24 +196,53 @@ const ManageTours = () => {
       formData.append('folder', uploadFolder || 'general');
       formData.append('coverIndex', coverIndex.toString());
 
-      await axios.post(uploadTourImagesBulk_api(activeTourId), formData, {
+      if (!activeTourId) {
+        toast.error('Tour ID is missing. Please close and reopen the gallery.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Uploading images to:', uploadTourImagesBulk_api(activeTourId));
+      
+      const response = await axios.post(uploadTourImagesBulk_api(activeTourId), formData, {
         headers: { 
-          'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}` 
         }
       });
 
-      toast.success('Gallery updated successfully!');
+      if (response.data.status === 200) {
+        toast.success(response.data.message || 'Gallery updated successfully!');
+        
+        // Update local tour cover image if it was changed
+        if (response.data.data?.coverImage) {
+          setTours(prevTours => prevTours.map(t => 
+            (t.tourId || t.id) === activeTourId 
+              ? { ...t, coverImage: response.data.data.coverImage } 
+              : t
+          ));
+        }
+      }
+
       setShowUploadForm(false);
       setSelectedGalleryFiles([]);
+      setSelectedImagePreviews([]);
       // Refresh
-    handleSeeItinerary({ slug: itineraryData.slug, tourId: activeTourId });
+      handleSeeItinerary({ slug: itineraryData.slug, tourId: activeTourId });
     } catch (error) {
       console.error('Error uploading gallery:', error);
       toast.error('Failed to upload gallery: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedGalleryFiles(files);
+    
+    // Generate previews
+    const previews = files.map(file => URL.createObjectURL(file));
+    setSelectedImagePreviews(previews);
   };
 
   const handleOpenCoverModal = (tour) => {
@@ -282,6 +323,8 @@ const ManageTours = () => {
     setShowModal(false);
     setShowItineraryModal(false);
     setShowGalleryModal(false);
+    setSelectedGalleryFiles([]);
+    setSelectedImagePreviews([]);
   };
 
   const handleSaveItinerary = async () => {
@@ -352,6 +395,12 @@ const ManageTours = () => {
     setLoading(true);
     try {
       const token = getCookie('adminToken');
+      if (!token) {
+        toast.error('Session expired. Please login again.');
+        navigate('/admin/login');
+        return;
+      }
+
       const payload = {
         destinationId: Number(formData.destinationId),
         slug: formData.slug,
@@ -415,7 +464,11 @@ const ManageTours = () => {
           <h1>Manage Tours</h1>
           <p>Add, edit or remove tour packages according to API structure.</p>
         </div>
-        <button className={styles.btnPrimary} onClick={() => { resetForm(); setShowModal(true); }}>+ Add New Tour</button>
+        <button className={styles.btnPrimary} onClick={() => { 
+          resetForm(); 
+          setFormData(prev => ({ ...prev, destinationId: activeDestId || '' }));
+          setShowModal(true); 
+        }}>+ Add New Tour</button>
       </div>
 
       <div className={styles.tabsContainer}>
@@ -519,10 +572,8 @@ const ManageTours = () => {
             </div>
             
             <div className={styles.scrollableForm}>
-              <form onSubmit={handleSave} className={styles.formGrid}>
-              
-
-
+              <form id="addTourForm" onSubmit={handleSave} className={styles.formGrid}>
+                
                 <div className={styles.formGroup}>
                   <label>Destination</label>
                   <select 
@@ -535,8 +586,6 @@ const ManageTours = () => {
                     {destinations.map(d => (
                       <option key={d.id} value={d.id}>{d.name || d.label} (ID: {d.id})</option>
                     ))}
-                    {/* Fallback option matching the curl */}
-                    <option value="8">Goa (ID: 8)</option>
                   </select>
                 </div>
 
@@ -664,16 +713,16 @@ const ManageTours = () => {
                     placeholder="e.g. Beach, Party, Cruise" 
                   />
                 </div>
-
-                <div className={styles.fullWidth} style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                  <button type="submit" className={styles.btnPrimary} disabled={loading}>
-                    {loading ? 'Saving via API...' : 'Save Tour Package'}
-                  </button>
-                  <button type="button" className={styles.btnOutline} onClick={resetForm} disabled={loading}>
-                    Cancel
-                  </button>
-                </div>
               </form>
+            </div>
+
+            <div className={styles.modalFooter} style={{ gap: '1rem' }}>
+              <button type="submit" form="addTourForm" className={styles.btnPrimary} style={{ flex: 1 }} disabled={loading}>
+                {loading ? 'Saving...' : (editingTour ? 'Update Tour' : 'Save New Tour')}
+              </button>
+              <button type="button" className={styles.btnOutline} style={{ flex: 1 }} onClick={resetForm} disabled={loading}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -917,38 +966,36 @@ const ManageTours = () => {
               <button className={styles.closeBtn} onClick={resetForm}>&times;</button>
             </div>
             
-            <div className={styles.scrollableForm} style={{ padding: '2rem' }}>
+            <div className={styles.scrollableForm}>
               {fetchingItinerary ? (
                 <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
                   <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🖼️</div>
                   Loading tour gallery...
                 </div>
-              ) : itineraryData && Array.isArray(itineraryData.images) && itineraryData.images.length > 0 ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                  {itineraryData.images.map((img, i) => (
-                    <div key={i} style={{ borderRadius: '12px', overflow: 'hidden', aspectRation: '1', height: '180px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                      <img 
-                        src={img} 
-                        alt={`Gallery ${i}`} 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
-                        onClick={() => window.open(img, '_blank')}
-                      />
+              ) : !showUploadForm ? (
+                <>
+                  {itineraryData && Array.isArray(itineraryData.images) && itineraryData.images.length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                      {itineraryData.images.map((img, i) => (
+                        <div key={i} style={{ borderRadius: '12px', overflow: 'hidden', aspectRatio: '1', height: '180px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                          <img 
+                            src={img} 
+                            alt={`Gallery ${i}`} 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
+                            onClick={() => window.open(img, '_blank')}
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '4rem', color: '#64748b', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '20px', border: '1px dashed rgba(255, 255, 255, 0.1)' }}>
+                      <p>No images found in this tour's gallery.</p>
+                    </div>
+                  )}
+                </>
               ) : (
-                <div style={{ textAlign: 'center', padding: '4rem', color: '#64748b', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '20px', border: '1px dashed rgba(255, 255, 255, 0.1)' }}>
-                  <p>No images found in this tour's gallery.</p>
-                </div>
-              )}
-            </div>
-            
-            <div className={styles.modalFooter} style={{ justifyContent: 'space-between' }}>
-              {!showUploadForm ? (
-                <button className={styles.btnPrimary} onClick={() => setShowUploadForm(true)}>+ Add More Photos</button>
-              ) : (
-                <div style={{ width: '100%' }}>
-                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                       <div className={styles.formGroup}>
                         <label style={{ fontSize: '0.7rem' }}>Storage Folder Name</label>
@@ -971,29 +1018,64 @@ const ManageTours = () => {
                         />
                       </div>
                     </div>
-                    <div className={styles.formGroup} style={{ marginBottom: '1.5rem' }}>
+                    <div className={styles.formGroup}>
                       <label style={{ fontSize: '0.7rem' }}>Select Images (Bulk)</label>
                       <input 
                         type="file" 
                         multiple 
                         className={styles.input} 
-                        onChange={e => setSelectedGalleryFiles(Array.from(e.target.files))}
+                        onChange={handleFileChange}
                         accept="image/*"
                       />
-                      <p style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.5rem' }}>
-                        Selected: {selectedGalleryFiles.length} images
+                      
+                      {selectedImagePreviews.length > 0 && (
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '12px' }}>
+                          {selectedImagePreviews.map((url, i) => (
+                            <div key={i} style={{ position: 'relative' }}>
+                              <img 
+                                src={url} 
+                                alt="preview" 
+                                style={{ 
+                                  width: '80px', 
+                                  height: '80px', 
+                                  objectFit: 'cover', 
+                                  borderRadius: '8px',
+                                  border: coverIndex === i ? '2px solid #ff8a00' : '2px solid transparent',
+                                  cursor: 'pointer'
+                                }} 
+                                onClick={() => setCoverIndex(i)}
+                              />
+                              {coverIndex === i && (
+                                <div style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ff8a00', borderRadius: '50%', width: '20px', height: '20px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>⭐</div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.75rem' }}>
+                        Selected: <strong>{selectedGalleryFiles.length}</strong> images. {selectedGalleryFiles.length > 0 && 'Click an image to set as main cover.'}
                       </p>
-                    </div>
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                      <button className={styles.btnPrimary} style={{ flex: 1 }} onClick={handleGalleryUpload} disabled={loading}>
-                        {loading ? 'Uploading Images...' : 'Confirm Bulk Upload'}
-                      </button>
-                      <button className={styles.btnOutline} onClick={() => setShowUploadForm(false)}>Cancel</button>
                     </div>
                   </div>
                 </div>
               )}
-              {!showUploadForm && <button className={styles.btnOutline} onClick={resetForm}>Close Gallery</button>}
+            </div>
+            
+            <div className={styles.modalFooter} style={{ gap: '1rem' }}>
+              {!showUploadForm ? (
+                <>
+                  <button className={styles.btnPrimary} style={{ flex: 1 }} onClick={() => setShowUploadForm(true)}>+ Add More Photos</button>
+                  <button className={styles.btnOutline} style={{ flex: 1 }} onClick={resetForm}>Close Gallery</button>
+                </>
+              ) : (
+                <>
+                  <button className={styles.btnPrimary} style={{ flex: 1 }} onClick={handleGalleryUpload} disabled={loading}>
+                    {loading ? 'Uploading...' : 'Confirm Bulk Upload'}
+                  </button>
+                  <button className={styles.btnOutline} style={{ flex: 1 }} onClick={() => setShowUploadForm(false)}>Cancel</button>
+                </>
+              )}
             </div>
           </div>
         </div>
